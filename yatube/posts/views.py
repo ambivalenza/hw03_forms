@@ -24,26 +24,30 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.all()[:12]
+    paginator = Paginator(posts, 10)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
     return render(request, "group.html",
-                  {"group": group, "posts": posts})
+                  {"group": group, "posts": posts,
+                   "page": page})
 
 
 def profile(request, username):
-    user = get_object_or_404(User, username=username)
-    posts = user.posts.all()
+    author = get_object_or_404(User, username=username)
+    posts = author.posts.all()
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     return render(request, 'profile.html',
-                  {'user': user,
+                  {'author': author,
                    'page': page})
 
 
 def post_view(request, username, post_id):
-    user = get_object_or_404(User, username=username)
+    author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, id=post_id)
     return render(request, 'post.html',
-                  {'user': user,
+                  {'author': author,
                    'post': post})
 
 
