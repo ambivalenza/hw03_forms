@@ -4,6 +4,7 @@
 <title>Записи сообщества {{ group.title }} | Yatube</title>
 <p>{{ group.description }}</p>
 {% for post in posts %}
+<p>{{ post.text }}</p>
 <h3>
   Автор: {{ post.author.get_full_name }}, Дата публикации: {{ post.pub_date | date:"d M Y" }}
 </h3>
