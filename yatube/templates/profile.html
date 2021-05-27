@@ -7,11 +7,11 @@
         <div class="card-body">
           <div class="h2">
             <!-- Имя автора -->
-            {{ user.first_name }} {{ user.last_name }}
+            {{ author.first_name }} {{ author.last_name }}
           </div>
           <div class="h3 text-muted">
             <!-- username автора -->
-            {{ user.username }}
+            {{ author.username }}
           </div>
         </div>
         <ul class="list-group list-group-flush">
@@ -24,7 +24,7 @@
           <li class="list-group-item">
             <div class="h6 text-muted">
               <!-- Количество записей -->
-              Записей: {{ user.posts.count }}
+              Записей: {{ author.posts.count }}
             </div>
           </li>
         </ul>
@@ -37,17 +37,18 @@
         <div class="card-body">
           <p class="card-text">
             <!-- Ссылка на страницу автора в атрибуте href; username автора в тексте ссылки -->
-            <a href="/{{ user.username }}/"><strong class="d-block text-gray-dark">@{{ user.username }} </strong></a>
+            <a href="/{{ user.username }}/"><strong class="d-block text-gray-dark">@{{ author.username }} </strong></a>
             <!-- Текст поста -->
             {{ post.text }}
           </p>
           <div class="d-flex justify-content-between align-items-center">
             <div class="btn-group ">
               <!-- Ссылка на страницу записи в атрибуте href-->
-              <a class="btn btn-sm text-muted" href="/{{ user.username }}/{{ post_id }}/" role="button">Добавить комментарий</a>
+              <a class="btn btn-sm text-muted" href="/{{ user.username }}/{{ post_id }}/" role="button">Добавить
+                комментарий</a>
               <!-- Ссылка на редактирование, показывается только автору записи -->
-              {% if username == user.username %}
-                <a class="btn btn-sm text-muted" href="/{{ user.username }}/{{ post_id }}/edit" role="button">Редактировать</a>
+              {% if user.username == author.username %}
+              <a class="btn btn-sm text-muted" href="/{{ user.username }}/{{ post_id }}/edit" role="button">Редактировать</a>
               {% endif %}
             </div>
             <!-- Дата публикации  -->

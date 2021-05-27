@@ -1,18 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Последние обновления на сайте{% endblock %}
-
+{% block header %}Последние обновления на сайте{% endblock %}
 {% block content %}
 
-  <h1>Последние обновления на сайте</h1>
 
-  {% for post in page %}
-    <br>
+{% for post in page %}
+<br>
+<div>
+  <p class="card-text">
     {{ post }}
-    <br>
-    <br>
-    <br>
-  {% endfor %}
+    <!-- Ссылка на страницу автора в атрибуте href; username автора в тексте ссылки -->
+      <a href="/{{ post.author.username }}/">
+      <strong class="d-block text-gray-dark">
+        @{{ post.author.username }}
+      </strong>
+      </a>
+    <!-- Текст поста -->
+    {{ post.text }}
+  </p>
+</div>
+<br>
+{% endfor %}
 
-  {% include "paginator.html" %}
+{% include "paginator.html" %}
 
 {% endblock %}
