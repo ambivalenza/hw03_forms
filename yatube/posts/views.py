@@ -30,7 +30,7 @@ def group_posts(request, slug):
     paginator = Paginator(post_list, COUNT_OF_PAGES)
     page = paginator.get_page(page_number)
     return render(request,
-                  'post/group.html',
+                  'posts/group.html',
                   {
                       'group': group,
                       'page': page
@@ -45,7 +45,7 @@ def profile(request, username):
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     return render(
-        request, 'post/profile.html',
+        request, 'posts/profile.html',
         {
             'author': author,
             'page': page,
@@ -56,9 +56,9 @@ def profile(request, username):
 def post_view(request, username, post_id):
     author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, id=post_id, author__username=username)
-    return render(request, 'post/post.html',
+    return render(request, 'posts/posts.html',
                   {'author': author,
-                   'post': post})
+                   'posts': post})
 
 
 @login_required()
@@ -66,14 +66,14 @@ def post_edit(request, username, post_id):
     is_edit = 1
     post = get_object_or_404(Post, id=post_id, author__username=username)
     if post.author != request.user:
-        return redirect('post', username=username, post_id=post_id)
+        return redirect('posts', username=username, post_id=post_id)
     form = PostForm(request.POST or None)
     if form.is_valid():
         post = form.save(commit=False)
         post.author = request.user
         post.save()
-        return redirect('post', username=username, post_id=post_id)
-    return render(request, 'post/new.html',
+        return redirect('posts', username=username, post_id=post_id)
+    return render(request, 'posts/new.html',
                   {
                       'form': form,
                       'post_id': post_id,
@@ -91,7 +91,7 @@ def new_post(request):
         post.author = request.user
         post.save()
         return redirect('index')
-    return render(request, 'post/new.html',
+    return render(request, 'posts/new.html',
                   {
                       'form': form,
                       'is_edit': is_edit,
