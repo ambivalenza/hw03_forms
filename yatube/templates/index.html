@@ -10,7 +10,7 @@
   <p class="card-text">
     {{ post }}
     <!-- Ссылка на страницу автора в атрибуте href; username автора в тексте ссылки -->
-      <a href="/{{ post.author.username }}/">
+      <a href="{% url 'profile' post.author.username %}">
       <strong class="d-block text-gray-dark">
         @{{ post.author.username }}
       </strong>
