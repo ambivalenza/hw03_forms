@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
+
 from yatube.settings import COUNT_OF_PAGES
 
 from .forms import PostForm
@@ -29,7 +30,7 @@ def group_posts(request, slug):
     paginator = Paginator(post_list, COUNT_OF_PAGES)
     page = paginator.get_page(page_number)
     return render(request,
-                  'group.html',
+                  'post/group.html',
                   {
                       'group': group,
                       'page': page
@@ -44,7 +45,7 @@ def profile(request, username):
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     return render(
-        request, 'profile.html',
+        request, 'post/profile.html',
         {
             'author': author,
             'page': page,
@@ -55,7 +56,7 @@ def profile(request, username):
 def post_view(request, username, post_id):
     author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, id=post_id, author__username=username)
-    return render(request, 'post.html',
+    return render(request, 'post/post.html',
                   {'author': author,
                    'post': post})
 
@@ -72,12 +73,12 @@ def post_edit(request, username, post_id):
         post.author = request.user
         post.save()
         return redirect('post', username=username, post_id=post_id)
-    return render(request, 'new.html',
+    return render(request, 'post/new.html',
                   {
-        'form': form,
-        'post_id': post_id,
-        'is_edit' : is_edit
-    }
+                      'form': form,
+                      'post_id': post_id,
+                      'is_edit': is_edit
+                  }
                   )
 
 
@@ -90,7 +91,7 @@ def new_post(request):
         post.author = request.user
         post.save()
         return redirect('index')
-    return render(request, 'new.html',
+    return render(request, 'post/new.html',
                   {
                       'form': form,
                       'is_edit': is_edit,
