@@ -3,7 +3,7 @@
 <div class="row justify-content-center">
   <div class="col-md-8 p-5">
     <div class="card">
-      {% if is_edit == 0 %}
+      {% if is_edit == '0' %}
       <div class="card-header">Создание новой записи</div>
       {% for error in form.errors %}
       <div class="alert alert-danger" role="alert">
