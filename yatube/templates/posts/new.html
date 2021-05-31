@@ -1,28 +1,20 @@
 {% extends "base.html" %}
+{% block title %}{% if is_edit == True %}Редактирование{% else %}Создание {% endif %}поста {% endblock %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-md-8 p-5">
     <div class="card">
-      {% if is_edit == '0' %}
-      <div class="card-header">Создание новой записи</div>
-      {% include 'includes/createform.html' %}
-      <div class="col-md-6 offset-md-4">
-        <button type="submit" class="btn btn-primary">
-          Сохранить
-        </button>
-        {% else %}
-        <div class="card-header">Редактирование записи</div>
+      <div class="card-header">{% if is_edit == True %}Редактировать{% else %}Новый{% endif %} пост</div>
+      <div class="card-body">
         {% include 'includes/createform.html' %}
         <div class="col-md-6 offset-md-4">
           <button type="submit" class="btn btn-primary">
-            Отредактировать
+            {% if is_edit == True %}Отредактировать{% else %}Создать{% endif %} пост
           </button>
-          {% endif %}
-        </div>
-        <br>
-        </form>
-      </div> <!-- card body -->
-    </div> <!-- card -->
-  </div> <!-- col -->
-</div> <!-- row -->
-{% endblock %}
+          <br>
+          </form>
+        </div> <!-- card body -->
+      </div> <!-- card -->
+    </div> <!-- col -->
+  </div> <!-- row -->
+  {% endblock %}
