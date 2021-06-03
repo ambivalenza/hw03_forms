@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Пост #{{post.id }}{% endblock %}
+{% block title %}Пост #{{ post.id }}{% endblock %}
 {% block content %}
 <main role="main" class="container">
   <div class="row">
@@ -9,12 +9,12 @@
       </div>
     </div>
     <div class="col-md-9">
-    <!-- Пост -->
-      {% include "includes/editbody.html" %}
-          </div>
-        </div>
-      </div>
+      <!-- Пост -->
+      {% include "includes/postcard.html" %}
     </div>
+  </div>
+  </div>
+  </div>
   </div>
 </main>
 {% endblock %}

@@ -1,20 +1,34 @@
 {% extends "base.html" %}
-{% block title %}{% if is_edit == True %}Редактирование{% else %}Создание {% endif %}поста {% endblock %}
+{% block title %}{{ is_edit|yesno:"Редактирование,Создание" }} поста{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-md-8 p-5">
     <div class="card">
-      <div class="card-header">{% if is_edit == True %}Редактировать{% else %}Новый{% endif %} пост</div>
+      <div class="card-header">{{ is_edit|yesno:"Редактировать,Создать" }} пост</div>
       <div class="card-body">
-        {% include 'includes/createform.html' %}
-        <div class="col-md-6 offset-md-4">
-          <button type="submit" class="btn btn-primary">
-            {% if is_edit == True %}Отредактировать{% else %}Создать{% endif %} пост
-          </button>
+        {% for error in form.errors %}
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+        {% endfor %}
+        <form method="post">
+          {% csrf_token %}
           <br>
-          </form>
-        </div> <!-- card body -->
+          {% for field in form %}
+          <div class="form-group row" aria-required="{{ field.field.required }}">
+            <label for="{{ field.id_for_label }}" class="col-md-4 col-form-label text-md-right">{{ field.label }}</label>
+            <div class="col-md-6">{{ field }}</div>
+          </div>
+          {% endfor %}
+          <div class="col-md-6 offset-md-4">
+            <button type="submit" class="btn btn-primary">
+              {{ is_edit|yesno:"Отредактировать,Создать" }} пост
+            </button>
+            <br>
+          </div> <!-- card body -->
+        </form>
       </div> <!-- card -->
     </div> <!-- col -->
   </div> <!-- row -->
+</div>
   {% endblock %}
