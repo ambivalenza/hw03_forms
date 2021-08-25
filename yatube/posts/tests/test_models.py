@@ -31,3 +31,5 @@ class PostModelTest(TestCase):
     def test_models_group_have_correct_object_names(self):
         title = PostModelTest.group.title
         self.assertEqual(title, 'Тестовая группа')
+
+
