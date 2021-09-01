@@ -1,10 +1,14 @@
 import re
+import tempfile
 
 import pytest
 from django.contrib.admin.sites import site
 from django.contrib.auth import get_user_model
 from django.db.models import fields
 from django.template.loader import select_template
+from django.core.paginator import Page
+
+from tests.utils import get_field_from_context
 
 try:
     from posts.models import Post
@@ -73,21 +77,31 @@ class TestPost:
             'Свойство `group` модели `Post` должно быть с атрибутом `null=True`'
         )
 
+        image_field = search_field(model_fields, 'image')
+        assert image_field is not None, 'Добавьте свойство `image` в модель `Post`'
+        assert type(image_field) == fields.files.ImageField, (
+            'Свойство `image` модели `Post` должно быть `ImageField`'
+        )
+        assert image_field.upload_to == 'posts/', (
+            "Свойство `image` модели `Post` должно быть с атрибутом `upload_to='posts/'`"
+        )
+
     @pytest.mark.django_db(transaction=True)
     def test_post_create(self, user):
         text = 'Тестовый пост'
         author = user
 
-        assert Post.objects.all().count() == 0
+        assert Post.objects.count() == 0
 
-        post = Post.objects.create(text=text, author=author)
-        assert Post.objects.all().count() == 1
+        image = tempfile.NamedTemporaryFile(suffix=".jpg").name
+        post = Post.objects.create(text=text, author=author, image=image)
+        assert Post.objects.count() == 1
         assert Post.objects.get(text=text, author=author).pk == post.pk
 
     def test_post_admin(self):
         admin_site = site
 
-        assert Post in admin_site._registry, 'Зарегестрируйте модель `Post` в админской панели'
+        assert Post in admin_site._registry, 'Зарегистрируйте модель `Post` в админской панели'
 
         admin_model = admin_site._registry[Post]
 
@@ -146,19 +160,19 @@ class TestGroup:
         text = 'Тестовый пост'
         author = user
 
-        assert Post.objects.all().count() == 0
+        assert Post.objects.count() == 0
 
         post = Post.objects.create(text=text, author=author)
-        assert Post.objects.all().count() == 1
+        assert Post.objects.count() == 1
         assert Post.objects.get(text=text, author=author).pk == post.pk
 
         title = 'Тестовая группа'
         slug = 'test-link'
         description = 'Тестовое описание группы'
 
-        assert Group.objects.all().count() == 0
+        assert Group.objects.count() == 0
         group = Group.objects.create(title=title, slug=slug, description=description)
-        assert Group.objects.all().count() == 1
+        assert Group.objects.count() == 1
         assert Group.objects.get(slug=slug).pk == group.pk
 
         post.group = group
@@ -170,21 +184,41 @@ class TestGroupView:
 
     @pytest.mark.django_db(transaction=True)
     def test_group_view(self, client, post_with_group):
+        url = f'/group/{post_with_group.group.slug}'
+        url_templ = '/group/<slug>/'
         try:
-            response = client.get(f'/group/{post_with_group.group.slug}')
+            response = client.get(url)
         except Exception as e:
-            assert False, f'''Страница `/group/<slug>/` работает неправильно. Ошибка: `{e}`'''
+            assert False, f'''Страница `{url_templ}` работает неправильно. Ошибка: `{e}`'''
         if response.status_code in (301, 302):
-            response = client.get(f'/group/{post_with_group.group.slug}/')
+            response = client.get(f'{url}/')
         if response.status_code == 404:
-            assert False, 'Страница `/group/<slug>/` не найдена, проверьте этот адрес в *urls.py*'
+            assert False, f'Страница `{url_templ}` не найдена, проверьте этот адрес в *urls.py*'
 
         if response.status_code != 200:
-            assert False, 'Страница `/group/<slug>/` работает неправильно.'
+            assert False, f'Страница `{url_templ}` работает неправильно.'
+
+        page_context = get_field_from_context(response.context, Page)
+        assert page_context is not None, (
+            f'Проверьте, что передали статьи автора в контекст страницы `{url_templ}` типа `Page`'
+        )
+        assert len(page_context.object_list) == 1, (
+            f'Проверьте, что в контекст страницы переданы правильные статьи автора `{url_templ}`'
+        )
+        posts_list = page_context.object_list
+        for post in posts_list:
+            assert hasattr(post, 'image'), (
+                f'Убедитесь, что статья, передаваемая в контекст страницы `{url_templ}`, имеет поле `image`'
+            )
+            assert getattr(post, 'image') is not None, (
+                f'Убедитесь, что статья, передаваемая в контекст страницы `{url_templ}`, имеет поле `image`, '
+                'и туда передается изображение'
+            )
+
         group = post_with_group.group
         html = response.content.decode()
 
-        templates_list = ['group.html', 'posts/group.html']
+        templates_list = ['group_list.html', 'posts/group_list.html']
         html_template = select_template(templates_list).template.source
 
         assert search_refind(r'{%\s*for\s+.+in.*%}', html_template), (
@@ -195,14 +229,7 @@ class TestGroupView:
         )
 
         assert re.search(
-            r'<\s*title\s*>\s*Записи\s+сообщества\s+' + group.title + r'\s+\|\s+Yatube\s*<\s*\/title\s*>',
-            html
-        ), (
-            'Отредактируйте HTML-шаблон, не найдено название страницы '
-            '`<title>Записи сообщества {{ название_группы }} | Yatube</title>`'
-        )
-        assert re.search(
-            r'<\s*h1\s*>\s*' + group.title + r'\s*<\s*\/h1\s*>',
+            group.title,
             html
         ), (
             'Отредактируйте HTML-шаблон, не найден заголовок группы '
@@ -213,7 +240,48 @@ class TestGroupView:
             html
         ), 'Отредактируйте HTML-шаблон, не найдено описание группы `<p>{{ описание_группы }}</p>`'
 
-        assert re.search(
-            r'<\s*p(\s+class=".+"|\s*)>\s*' + post_with_group.text + r'\s*<\s*\/p\s*>',
-            html
-        ), 'Отредактируйте HTML-шаблон, не найден текст поста `<p>{{ текст_поста }}</p>`'
+
+class TestCustomErrorPages:
+
+    @pytest.mark.django_db(transaction=True)
+    def test_custom_404(self, client):
+        url_invalid = '/some_invalid_url_404/'
+        code = 404
+        response = client.get(url_invalid)
+
+        assert response.status_code == code, (
+            f'Убедитесь, что для несуществующих адресов страниц, сервер возвращает код {code}'
+        )
+
+        try:
+            from yatube.urls import handler404 as handler404_student
+        except ImportError:
+            assert False, (
+                f'Убедитесь, что для страниц, возвращающих код {code}, '
+                'настроен кастомный шаблон'
+            )
+
+    @pytest.mark.django_db(transaction=True)
+    def test_custom_500(self):
+        code = 500
+
+        try:
+            from yatube.urls import handler500
+        except ImportError:
+            assert False, (
+                f'Убедитесь, что для страниц, возвращающих код {code}, '
+                'настроен кастомный шаблон'
+            )
+
+    @pytest.mark.django_db(transaction=True)
+    def test_custom_403(self):
+        code = 403
+
+        try:
+            from yatube.urls import handler403
+        except ImportError:
+            assert False, (
+                f'Убедитесь, что для страниц, возвращающих код {code}, '
+                'настроен кастомный шаблон'
+            )
+
